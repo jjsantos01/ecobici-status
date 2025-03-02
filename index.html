@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoBici Status - CDMX</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">🚲</div>
+                <h1>EcoBici<span>Status</span></h1>
+            </div>
+            <div class="update-info">
+                <span id="last-update">Actualizando datos...</span>
+                <button id="refresh-btn">Actualizar</button>
+            </div>
+        </header>
+
+        <main>
+            <section class="stats-grid">
+                <div class="stat-card highlight">
+                    <h3>Bicicletas Reportadas</h3>
+                    <div class="stat-value" id="total-reported">--</div>
+                    <div class="stat-trend" id="reported-trend">--</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Bicicletas Disponibles</h3>
+                    <div class="stat-value" id="total-available">--</div>
+                    <div class="stat-trend" id="available-trend">--</div>
+                </div>
+                <div class="stat-card">
+                    <h3>% Reportadas</h3>
+                    <div class="stat-value" id="reported-percentage">--</div>
+                    <div class="stat-info">Del total ancladas</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Viajes en Curso (aprox.)</h3>
+                    <div class="stat-value" id="active-trips">--</div>
+                    <div class="stat-info">Estimado en tiempo real</div>
+                </div>
+            </section>
+
+            <section class="data-tables">
+                <div class="table-wrapper">
+                    <h2>Por Alcaldía</h2>
+                    <table id="alcaldia-table">
+                        <thead>
+                            <tr>
+                                <th>Alcaldía</th>
+                                <th>Disponibles</th>
+                                <th>Reportadas</th>
+                                <th>% Reportadas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="4" class="loading-data">Cargando datos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="table-wrapper">
+                    <h2>Por Colonia</h2>
+                    <table id="colonia-table">
+                        <thead>
+                            <tr>
+                                <th>Colonia</th>
+                                <th>Disponibles</th>
+                                <th>Reportadas</th>
+                                <th>% Reportadas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="4" class="loading-data">Cargando datos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Desarrollado por <a href="https://x.com/jjsantoso" target="_blank">@jjsantoso</a> con 🚲 para la CDMX | Datos de <a href="https://ecobici.cdmx.gob.mx/mapa/" target="_blank">Ecobici CDMX</a></p>
+            <p class="small">El cálculo viajes en curso asume que hay 9300 bicicletas en total, la cantidad real puede ser diferente. | <span id="active-stations">-- estaciones activas</span></p>
+        </footer>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
