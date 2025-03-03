@@ -4,6 +4,8 @@ const STATION_STATUS_URL = 'https://gbfs.mex.lyftbikes.com/gbfs/en/station_statu
 const STATION_INFO_URL = 'https://gbfs.mex.lyftbikes.com/gbfs/en/station_information.json';
 const CSV_FILE_PATH = 'cicloestaciones_ecobici_20250216.csv';
 const UPDATE_INTERVAL = 120000; // 2 minutes in milliseconds
+const totalBikesEl = document.getElementById('total-bikes');
+totalBikesEl.textContent = ECOBICI_TOTAL_BIKES;
 
 // State variables
 let stationData = {
