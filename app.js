@@ -82,6 +82,15 @@ async function fetchCSVData() {
             skipEmptyLines: true,
             encoding: "UTF-8",
             complete: function(results) {
+                results.data.forEach(row => {
+                    if (row.num_cicloe) {
+                      if (row.num_cicloe.length === 1)
+                        row.num_cicloe = '00' + row.num_cicloe;
+                      else if (row.num_cicloe.length === 2) {
+                        row.num_cicloe = '0' + row.num_cicloe;
+                      }
+                    }
+                });
                 stationData.csvData = results.data;
                 resolve();
             },
