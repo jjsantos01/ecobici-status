@@ -23,7 +23,7 @@ body {
     background-color: var(--dark);
     color: var(--light);
     line-height: 1.6;
-    background-image: 
+    background-image:
         radial-gradient(circle at 15% 50%, rgba(255, 42, 109, 0.1) 0%, transparent 25%),
         radial-gradient(circle at 85% 30%, rgba(0, 243, 255, 0.1) 0%, transparent 25%);
     background-attachment: fixed;
@@ -258,6 +258,10 @@ footer {
     opacity: 0.7;
 }
 
+#heatmap {
+  border: 2px solid var(--secondary);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     header {
@@ -265,16 +269,16 @@ footer {
         align-items: flex-start;
         gap: 1rem;
     }
-    
+
     .update-info {
         width: 100%;
         justify-content: space-between;
     }
-    
+
     .stats-grid {
         grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     }
-    
+
     .stat-value {
         font-size: 2rem;
     }
@@ -284,11 +288,11 @@ footer {
     .stats-grid {
         grid-template-columns: 1fr 1fr;
     }
-    
+
     table {
         font-size: 0.8rem;
     }
-    
+
     th, td {
         padding: 0.5rem 0.25rem;
     }

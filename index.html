@@ -83,6 +83,24 @@
                     </table>
                 </div>
             </section>
+
+            <section class="heatmap-container">
+              <h2>Mapa de Calor de Bicicletas Deshabilitadas</h2>
+              <svg id="heatmap" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <!-- Filtro para suavizar los puntos y generar el efecto de "calor" -->
+                  <filter id="blur">
+                    <feGaussianBlur stdDeviation="2" />
+                  </filter>
+                </defs>
+                <g id="zoom-layer">
+                  <!-- Capa de calor con blur -->
+                  <g id="heatmap-layer" filter="url(#blur)"></g>
+                  <!-- Nueva capa de puntos sin blur -->
+                  <g id="stations-layer"></g>
+                </g>
+              </svg>
+            </section>
         </main>
 
         <footer>

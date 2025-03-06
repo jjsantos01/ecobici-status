@@ -35,6 +35,7 @@ refreshBtn.addEventListener('click', fetchAllData);
 function initializeApp() {
     fetchAllData();
     setInterval(fetchAllData, UPDATE_INTERVAL);
+    initializeMap();
 }
 
 // Data Fetching Functions
@@ -132,21 +133,23 @@ function mergeAllData() {
                 const shortName = info.short_name;
                 const csvInfo = csvMap.get(shortName);
 
-                mergedStations.push({
-                    stationId: status.station_id,
-                    shortName: shortName,
-                    name: info.name,
-                    bikesAvailable: status.num_bikes_available,
-                    bikesDisabled: status.num_bikes_disabled,
-                    docksAvailable: status.num_docks_available,
-                    isRenting: status.is_renting,
-                    isReturning: status.is_returning,
-                    lat: info.lat,
-                    lon: info.lon,
-                    alcaldia: csvInfo ? csvInfo.alcaldia : 'Desconocida',
-                    colonia: csvInfo ? csvInfo.colonia : 'Desconocida',
-                    totalAnchored: status.num_bikes_available + status.num_bikes_disabled
-                });
+                if (shortName !== 'MTL_LAB')  { // Ignorar la estación de prueba
+                  mergedStations.push({
+                      stationId: status.station_id,
+                      shortName: shortName,
+                      name: info.name,
+                      bikesAvailable: status.num_bikes_available,
+                      bikesDisabled: status.num_bikes_disabled,
+                      docksAvailable: status.num_docks_available,
+                      isRenting: status.is_renting,
+                      isReturning: status.is_returning,
+                      lat: info.lat,
+                      lon: info.lon,
+                      alcaldia: csvInfo ? csvInfo.alcaldia : 'Desconocida',
+                      colonia: csvInfo ? csvInfo.colonia : 'Desconocida',
+                      totalAnchored: status.num_bikes_available + status.num_bikes_disabled
+                  });
+                }
             }
         });
     }
@@ -244,6 +247,8 @@ function updateUI() {
     updateStatCards();
     updateAlcaldiaTable();
     updateColoniaTable();
+    updateHeatmap();
+    updateStationsLayer();
 }
 
 function updateLastUpdateTime() {
@@ -326,4 +331,118 @@ function updateColoniaTable() {
     } else {
         coloniaTableEl.innerHTML = '<tr><td colspan="4" class="loading-data">Sin datos disponibles</td></tr>';
     }
+}
+
+// Función para proyectar coordenadas geográficas a coordenadas SVG
+function project(lat, lon, width, height) {
+  // Aproximación de bounding box para CDMX (ajusta estos valores según tus necesidades)
+  const latMin = 19.2, latMax = 19.6;
+  const lonMin = -99.4, lonMax = -99.0;
+  const x = ((lon - lonMin) / (lonMax - lonMin)) * width;
+  // Invertir la coordenada Y para que las latitudes mayores se sitúen arriba
+  const y = ((latMax - lat) / (latMax - latMin)) * height;
+  return { x, y };
+}
+
+function updateHeatmap() {
+  const svg = document.getElementById('heatmap');
+  const heatmapLayer = document.getElementById('heatmap-layer');
+  // Limpia los elementos previos
+  heatmapLayer.innerHTML = '';
+
+  const width = svg.viewBox.baseVal.width;
+  const height = svg.viewBox.baseVal.height;
+
+  // Determinar el valor máximo de bicis deshabilitadas para normalizar la intensidad
+  let maxDisabled = 0;
+  stationData.mergedData.forEach(station => {
+    if (station.bikesDisabled > maxDisabled) {
+      maxDisabled = station.bikesDisabled;
+    }
+  });
+
+  // Para cada estación, agrega un círculo que representa la intensidad de "bicis deshabilitadas"
+  stationData.mergedData.forEach(station => {
+    const { x, y } = project(station.lat, station.lon, width, height);
+
+    // Normalizar la intensidad y definir opacidad (ajusta el rango según prefieras)
+    const intensity = station.bikesDisabled / maxDisabled;
+    const opacity = intensity;
+
+    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("cx", x);
+    circle.setAttribute("cy", y);
+    circle.setAttribute("r", 2.5); // Radio fijo, ajustar si es necesario
+    circle.setAttribute("fill", "red");
+    circle.setAttribute("fill-opacity", opacity);
+    heatmapLayer.appendChild(circle);
+  });
+}
+
+function updateStationsLayer() {
+  const svg = document.getElementById('heatmap');
+  const stationsLayer = document.getElementById('stations-layer');
+  stationsLayer.innerHTML = ''; // Limpia la capa
+
+  const width = svg.viewBox.baseVal.width;
+  const height = svg.viewBox.baseVal.height;
+
+  stationData.mergedData.forEach(station => {
+    const { x, y } = project(station.lat, station.lon, width, height);
+    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("cx", x);
+    circle.setAttribute("cy", y);
+    circle.setAttribute("r", 0.75);
+    circle.setAttribute("fill", "var(--tertiary)");
+
+    // Crear tooltip usando el elemento <title>
+    const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+    title.textContent = `Cicloestación: ${station.shortName}\nBicis deshabilitadas: ${station.bikesDisabled}\nBicis disponibles: ${station.bikesAvailable}`;
+    circle.appendChild(title);
+
+    stationsLayer.appendChild(circle);
+  });
+}
+
+// Configuración del zoom en el mapa
+let currentScale = 2.5;
+let currentTranslate = { x: 0, y: 0 };
+
+const heatmapSVG = document.getElementById('heatmap');
+const zoomLayer = document.getElementById('zoom-layer');
+
+heatmapSVG.addEventListener('wheel', function(event) {
+  event.preventDefault();
+  const scaleFactor = 1.1;
+  const oldScale = currentScale;
+
+  // Actualiza la escala según la dirección del scroll
+  if (event.deltaY < 0) {
+    currentScale *= scaleFactor;
+  } else {
+    currentScale /= scaleFactor;
+  }
+
+  // Obtener la posición del mouse en coordenadas SVG
+  const pt = heatmapSVG.createSVGPoint();
+  pt.x = event.clientX;
+  pt.y = event.clientY;
+  const svgP = pt.matrixTransform(heatmapSVG.getScreenCTM().inverse());
+
+  // Ajusta la traslación para que el punto bajo el cursor permanezca fijo
+  currentTranslate.x = svgP.x - (svgP.x - currentTranslate.x) * (currentScale / oldScale);
+  currentTranslate.y = svgP.y - (svgP.y - currentTranslate.y) * (currentScale / oldScale);
+
+  // Aplica la transformación combinada (traslación y escala) a todo el grupo
+  zoomLayer.setAttribute("transform", `translate(${currentTranslate.x}, ${currentTranslate.y}) scale(${currentScale})`);
+});
+
+function initializeMap() {
+  const svg = document.getElementById('heatmap');
+  const viewBox = svg.viewBox.baseVal;
+  currentTranslate.x = -(viewBox.width / 2 * (currentScale - 1));
+  currentTranslate.y = -(viewBox.height / 2 * (currentScale - 1));
+
+  const zoomLayer = document.getElementById('zoom-layer');
+  zoomLayer.setAttribute("transform", `translate(${currentTranslate.x}, ${currentTranslate.y}) scale(${currentScale})`);
 }
