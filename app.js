@@ -405,7 +405,7 @@ function updateStationsLayer() {
 }
 
 // Configuración del zoom en el mapa
-let currentScale = 2.5;
+let currentScale = 2.7;
 let currentTranslate = { x: 0, y: 0 };
 
 const heatmapSVG = document.getElementById('heatmap');
@@ -446,3 +446,43 @@ function initializeMap() {
   const zoomLayer = document.getElementById('zoom-layer');
   zoomLayer.setAttribute("transform", `translate(${currentTranslate.x}, ${currentTranslate.y}) scale(${currentScale})`);
 }
+
+// Variables para el estado del arrastre
+let isDragging = false;
+let dragStart = { x: 0, y: 0 };
+
+// Inicia el arrastre al presionar el botón del mouse
+heatmapSVG.addEventListener('mousedown', (event) => {
+  isDragging = true;
+  // Guarda la posición inicial del cursor en coordenadas de pantalla
+  dragStart.x = event.clientX;
+  dragStart.y = event.clientY;
+});
+
+// Durante el movimiento del mouse, si se está arrastrando, actualiza la traslación
+heatmapSVG.addEventListener('mousemove', (event) => {
+  if (!isDragging) return;
+
+  // Calcula la diferencia de posición
+  const dx = event.clientX - dragStart.x;
+  const dy = event.clientY - dragStart.y;
+
+  // Actualiza el punto de inicio para el siguiente movimiento
+  dragStart.x = event.clientX;
+  dragStart.y = event.clientY;
+
+  // Dado que la escala afecta la percepción del movimiento, ajusta el desplazamiento dividiéndolo por currentScale
+  currentTranslate.x += dx / currentScale;
+  currentTranslate.y += dy / currentScale;
+
+  // Aplica la nueva transformación al grupo de zoom
+  zoomLayer.setAttribute("transform", `translate(${currentTranslate.x}, ${currentTranslate.y}) scale(${currentScale})`);
+});
+
+// Finaliza el arrastre al soltar el botón o al salir del SVG
+heatmapSVG.addEventListener('mouseup', () => {
+  isDragging = false;
+});
+heatmapSVG.addEventListener('mouseleave', () => {
+  isDragging = false;
+});
