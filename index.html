@@ -43,6 +43,26 @@
                     <div class="stat-info">Estimado en tiempo real</div>
                 </div>
             </section>
+            
+            <section class="heatmap-container">
+              <h2>Mapa de Calor de Bicicletas reportadas</h2>
+              <svg id="heatmap" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <!-- Filtro para suavizar los puntos y generar el efecto de "calor" -->
+                  <filter id="blur">
+                    <feGaussianBlur stdDeviation="2" />
+                  </filter>
+                </defs>
+                <g id="zoom-layer">
+                  <!-- Capa de colonias -->
+                  <g id="colonias-layer"></g>
+                  <!-- Capa de calor con blur -->
+                  <g id="heatmap-layer" filter="url(#blur)"></g>
+                  <!-- capa de puntos sin blur -->
+                  <g id="stations-layer"></g>
+                </g>
+              </svg>
+            </section>
 
             <section class="data-tables">
                 <div class="table-wrapper">
