@@ -1,5 +1,5 @@
 // Constants
-const ECOBICI_TOTAL_BIKES = 8261; // from calculate_nbicis.ipynb
+const ECOBICI_TOTAL_BIKES = 7296; // from calculate_nbicis.ipynb
 const STATION_STATUS_URL = 'https://gbfs.mex.lyftbikes.com/gbfs/en/station_status.json';
 const STATION_INFO_URL = 'https://gbfs.mex.lyftbikes.com/gbfs/en/station_information.json';
 const CSV_FILE_PATH = 'cicloestaciones_ecobici_20250216.csv';
