@@ -249,6 +249,7 @@ function updateUI() {
     updateColoniaTable();
     updateHeatmap();
     updateStationsLayer();
+    updateColoniasLayer();
 }
 
 function updateLastUpdateTime() {
@@ -395,9 +396,9 @@ function updateStationsLayer() {
     circle.setAttribute("r", 0.75);
     circle.setAttribute("fill", "var(--tertiary)");
 
-    // Crear tooltip usando el elemento <title>
+    // tooltip usando el elemento <title>
     const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
-    title.textContent = `Cicloestación: ${station.shortName}\nBicis deshabilitadas: ${station.bikesDisabled}\nBicis disponibles: ${station.bikesAvailable}`;
+    title.textContent = `Cicloestación: ${station.shortName}\nColonia: ${station.colonia}\nBicis deshabilitadas: ${station.bikesDisabled}\nBicis disponibles: ${station.bikesAvailable}`;
     circle.appendChild(title);
 
     stationsLayer.appendChild(circle);
@@ -440,9 +441,11 @@ heatmapSVG.addEventListener('wheel', function(event) {
 function initializeMap() {
   const svg = document.getElementById('heatmap');
   const viewBox = svg.viewBox.baseVal;
-  currentTranslate.x = -(viewBox.width / 2 * (currentScale - 1));
-  currentTranslate.y = -(viewBox.height / 2 * (currentScale - 1));
-
+  let initialLat = 19.08;
+  let initialLon = -98.8;
+  const desiredSVGPoint = project(initialLat, initialLon, viewBox.width, viewBox.height);
+  currentTranslate.x = (viewBox.width / 2) - desiredSVGPoint.x;
+  currentTranslate.y = (viewBox.height / 2) - desiredSVGPoint.y;
   const zoomLayer = document.getElementById('zoom-layer');
   zoomLayer.setAttribute("transform", `translate(${currentTranslate.x}, ${currentTranslate.y}) scale(${currentScale})`);
 }
@@ -486,3 +489,45 @@ heatmapSVG.addEventListener('mouseup', () => {
 heatmapSVG.addEventListener('mouseleave', () => {
   isDragging = false;
 });
+
+function updateColoniasLayer() {
+  fetch('maps/colonias_ecobici_20250306.geojson')
+    .then(response => response.json())
+    .then(geojson => {
+      const coloniasLayer = document.getElementById('colonias-layer');
+      coloniasLayer.innerHTML = ""; // Limpia la capa
+      const svg = document.getElementById('heatmap');
+      const viewBox = svg.viewBox.baseVal; // Supone viewBox: { x: 0, y: 0, width: 800, height: 600 }
+
+      geojson.features.forEach(feature => {
+        let d = "";
+        if (feature.geometry.type === "LineString") {
+          d = lineToPath(feature.geometry.coordinates, viewBox.width, viewBox.height);
+        } else if (feature.geometry.type === "MultiLineString") {
+          feature.geometry.coordinates.forEach(line => {
+            d += lineToPath(line, viewBox.width, viewBox.height) + " ";
+          });
+        }
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", d);
+        path.setAttribute("stroke", "var(--primary)");
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke-width", "0.3");
+        coloniasLayer.appendChild(path);
+      });
+    })
+    .catch(error => {
+      console.error("Error al cargar el GeoJSON:", error);
+    });
+}
+
+// Función auxiliar para convertir un polígono (array de anillos) a un atributo "d" para SVG
+function lineToPath(coordinates, svgWidth, svgHeight) {
+  let d = "";
+  coordinates.forEach((point, index) => {
+    // point[0] es lon, point[1] es lat; la función project espera (lat, lon)
+    const { x, y } = project(point[1], point[0], svgWidth, svgHeight);
+    d += (index === 0 ? "M" : "L") + x + " " + y + " ";
+  });
+  return d;
+}
